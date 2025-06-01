@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儿童课程管理系统</title>
+    <style>
+        :root {
+            --primary-color: #6a89cc;
+            --secondary-color: #82ccdd;
+            --accent-color: #f8c291;
+            --dark-color: #3c6382;
+            --light-color: #f7f1e3;
+        }
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body {
+            background-color: #f0f4f8;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            color: #333;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--dark-color);
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .course-category {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .course-category:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .category-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .category-name {
+            font-weight: bold;
+            font-size: 1.3em;
+            flex-grow: 1;
+        }
+        
+        .toggle-icon {
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+        
+        .course-category.expanded .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        .episodes-container {
+            display: none;
+            padding: 0;
+        }
+        
+        .episode {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+            position: relative;
+        }
+        
+        .episode:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .episode:last-child {
+            border-bottom: none;
+        }
+        
+        .episode-number {
+            min-width: 100px;
+            font-weight: bold;
+            color: var(--dark-color);
+            background-color: var(--accent-color);
+            padding: 5px 10px;
+            border-radius: 20px;
+            text-align: center;
+            margin-right: 15px;
+        }
+        
+        .episode-title {
+            flex-grow: 1;
+            color: var(--dark-color);
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: color 0.2s;
+            padding: 5px;
+        }
+        
+        .episode-title:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        
+        .status-toggle {
+            width: 70px;
+            height: 35px;
+            border-radius: 20px;
+            background-color: #e55039;
+            position: relative;
+            cursor: pointer;
+            margin-left: 15px;
+            flex-shrink: 0;
+            transition: background-color 0.3s;
+        }
+        
+        .status-toggle.watched {
+            background-color: #78e08f;
+        }
+        
+        .toggle-knob {
+            width: 30px;
+            height: 30px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2.5px;
+            left: 3px;
+            transition: left 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .status-toggle.watched .toggle-knob {
+            left: 37px;
+        }
+        
+        .status-text {
+            font-size: 14px;
+            color: white;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            text-align: center;
+            user-select: none;
+            font-weight: bold;
+        }
+        
+        .edit-controls {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        
+        .form-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--dark-color);
+        }
+        
+        input, select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: border 0.3s;
+        }
+        
+        input:focus, select:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+        
+        .buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        button {
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .add-btn {
+            background-color: var(--secondary-color);
+            color: white;
+        }
+        
+        .edit-btn {
+            background-color: var(--accent-color);
+            color: var(--dark-color);
+        }
+        
+        .delete-btn {
+            background-color: #e55039;
+            color: white;
+        }
+        
+        .generate-btn {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            flex-grow: 1;
+        }
+        
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0,0,0,0.8);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 10px;
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; top: 10px; }
+            to { opacity: 1; top: 20px; }
+        }
+        
+        .edit-mode .episode-title,
+        .edit-mode .episode-number {
+            border: 2px dashed var(--accent-color);
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+        
+        .episode-actions {
+            display: flex;
+            gap: 8px;
+            margin-left: 10px;
+        }
+        
+        .edit-episode-btn, .delete-episode-btn {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .edit-episode-btn {
+            background-color: var(--accent-color);
+            color: var(--dark-color);
+        }
+        
+        .delete-episode-btn {
+            background-color: #e55039;
+            color: white;
+        }
+        
+        .edit-episode-btn:hover, .delete-episode-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <h1>📚 儿童课程管理系统 ✨</h1>
+    
+    <div id="courses-container"></div>
+    
+    <div class="edit-controls">
+        <h2 style="color: var(--dark-color); margin-bottom: 15px;">添加/编辑课程</h2>
+        <div class="form-group">
+            <label for="category-select">选择课程分类:</label>
+            <select id="category-select">
+                <option value="">-- 新建分类 --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="category-name">课程分类名称:</label>
+            <input type="text" id="category-name" placeholder="例如: 英语课程">
+        </div>
+        <div class="form-group">
+            <label for="episode-number">集数编号:</label>
+            <input type="text" id="episode-number" placeholder="例如: 第一单元第一课">
+        </div>
+        <div class="form-group">
+            <label for="episode-title">集数标题:</label>
+            <input type="text" id="episode-title" placeholder="例如: 认识字母ABC">
+        </div>
+        <div class="form-group">
+            <label for="episode-link">视频链接:</label>
+            <input type="text" id="episode-link" placeholder="输入视频链接URL">
+        </div>
+        <div class="buttons">
+            <button id="add-category-btn" class="add-btn">添加分类</button>
+            <button id="add-episode-btn" class="add-btn">添加集数</button>
+            <button id="edit-toggle-btn" class="edit-btn">编辑模式</button>
+            <button id="delete-category-btn" class="delete-btn">删除分类</button>
+            <button id="generate-static-btn" class="generate-btn">生成静态页面</button>
+        </div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+        // 课程数据
+        let courses = JSON.parse(localStorage.getItem('kidCourses')) || [];
+        let editMode = false;
+        let currentEditingEpisode = null;
+        
+        // DOM元素
+        const coursesContainer = document.getElementById('courses-container');
+        const categorySelect = document.getElementById('category-select');
+        const categoryNameInput = document.getElementById('category-name');
+        const episodeNumberInput = document.getElementById('episode-number');
+        const episodeTitleInput = document.getElementById('episode-title');
+        const episodeLinkInput = document.getElementById('episode-link');
+        const addCategoryBtn = document.getElementById('add-category-btn');
+        const addEpisodeBtn = document.getElementById('add-episode-btn');
+        const editToggleBtn = document.getElementById('edit-toggle-btn');
+        const deleteCategoryBtn = document.getElementById('delete-category-btn');
+        const generateStaticBtn = document.getElementById('generate-static-btn');
+        const toast = document.getElementById('toast');
+        
+        // 初始化
+        function init() {
+            renderCourses();
+            updateCategorySelect();
+            
+            // 事件监听
+            addCategoryBtn.addEventListener('click', addCategory);
+            addEpisodeBtn.addEventListener('click', addEpisode);
+            editToggleBtn.addEventListener('click', toggleEditMode);
+            deleteCategoryBtn.addEventListener('click', deleteCategory);
+            generateStaticBtn.addEventListener('click', generateStaticPage);
+        }
+        
+        // 显示提示消息
+        function showToast(message) {
+            toast.textContent = message;
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 2000);
+        }
+        
+        // 渲染课程
+        function renderCourses() {
+            coursesContainer.innerHTML = '';
+            
+            if (courses.length === 0) {
+                coursesContainer.innerHTML = '<p style="text-align: center; color: #666;">暂无课程，请添加课程分类和集数。</p>';
+                return;
+            }
+            
+            courses.forEach((category, catIndex) => {
+                const categoryElement = document.createElement('div');
+                categoryElement.className = 'course-category';
+                
+                const header = document.createElement('div');
+                header.className = 'category-header';
+                header.innerHTML = `
+                    <div class="category-name">${category.name}</div>
+                    <div class="toggle-icon">▼</div>
+                `;
+                
+                const episodesContainer = document.createElement('div');
+                episodesContainer.className = 'episodes-container';
+                
+                category.episodes.forEach((episode, epIndex) => {
+                    const episodeElement = document.createElement('div');
+                    episodeElement.className = 'episode';
+                    episodeElement.innerHTML = `
+                        <div class="episode-number" contenteditable="${editMode}">${episode.number}</div>
+                        <div class="episode-title" contenteditable="${editMode}">${episode.title}</div>
+                        <div class="status-toggle" data-cat="${catIndex}" data-ep="${epIndex}">
+                            <div class="toggle-knob"></div>
+                            <div class="status-text">未看</div>
+                        </div>
+                        ${editMode ? `
+                        <div class="episode-actions">
+                            <button class="edit-episode-btn" data-cat="${catIndex}" data-ep="${epIndex}">编辑</button>
+                            <button class="delete-episode-btn" data-cat="${catIndex}" data-ep="${epIndex}">删除</button>
+                        </div>
+                        ` : ''}
+                    `;
+                    
+                    // 初始化观看状态
+                    const toggle = episodeElement.querySelector('.status-toggle');
+                    const watchedStatus = JSON.parse(localStorage.getItem('kidCoursesStatus')) || {};
+                    const statusKey = `${catIndex}-${epIndex}`;
+                    
+                    if (watchedStatus[statusKey]) {
+                        toggle.classList.add('watched');
+                        toggle.querySelector('.status-text').textContent = '已看';
+                    }
+                    
+                    // 点击标题打开链接并标记为已看
+                    const title = episodeElement.querySelector('.episode-title');
+                    title.addEventListener('click', function(e) {
+                        if (editMode) return;
+                        e.preventDefault();
+                        
+                        // 更新状态
+                        toggle.classList.add('watched');
+                        toggle.querySelector('.status-text').textContent = '已看';
+                        
+                        // 保存状态
+                        watchedStatus[statusKey] = true;
+                        localStorage.setItem('kidCoursesStatus', JSON.stringify(watchedStatus));
+                        
+                        // 打开链接
+                        window.open(episode.link, '_blank');
+                    });
+                    
+                    // 手动切换已看/未看状态
+                    toggle.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        this.classList.toggle('watched');
+                        const isWatched = this.classList.contains('watched');
+                        this.querySelector('.status-text').textContent = isWatched ? '已看' : '未看';
+                        
+                        // 保存状态
+                        watchedStatus[statusKey] = isWatched;
+                        localStorage.setItem('kidCoursesStatus', JSON.stringify(watchedStatus));
+                    });
+                    
+                    // 编辑单集按钮
+                    if (editMode) {
+                        const editBtn = episodeElement.querySelector('.edit-episode-btn');
+                        editBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const catIdx = parseInt(this.getAttribute('data-cat'));
+                            const epIdx = parseInt(this.getAttribute('data-ep'));
+                            editEpisode(catIdx, epIdx);
+                        });
+                        
+                        const deleteBtn = episodeElement.querySelector('.delete-episode-btn');
+                        deleteBtn.addEventListener('click', function(e) {
+                            e.stopPropagation();
+                            const catIdx = parseInt(this.getAttribute('data-cat'));
+                            const epIdx = parseInt(this.getAttribute('data-ep'));
+                            deleteEpisode(catIdx, epIdx);
+                        });
+                    }
+                    
+                    episodesContainer.appendChild(episodeElement);
+                });
+                
+                // 点击分类标题展开/折叠
+                header.addEventListener('click', function() {
+                    categoryElement.classList.toggle('expanded');
+                    const isExpanded = categoryElement.classList.contains('expanded');
+                    episodesContainer.style.display = isExpanded ? 'block' : 'none';
+                    
+                    // 更新箭头图标
+                    const icon = this.querySelector('.toggle-icon');
+                    icon.textContent = isExpanded ? '▲' : '▼';
+                });
+                
+                // 默认展开第一个分类
+                if (catIndex === 0) {
+                    categoryElement.classList.add('expanded');
+                    episodesContainer.style.display = 'block';
+                    header.querySelector('.toggle-icon').textContent = '▲';
+                }
+                
+                categoryElement.appendChild(header);
+                categoryElement.appendChild(episodesContainer);
+                coursesContainer.appendChild(categoryElement);
+            });
+            
+            // 更新编辑模式
+            if (editMode) {
+                document.body.classList.add('edit-mode');
+                editToggleBtn.textContent = '退出编辑';
+            } else {
+                document.body.classList.remove('edit-mode');
+                editToggleBtn.textContent = '编辑模式';
+            }
+        }
+        
+        // 更新分类选择下拉框
+        function updateCategorySelect() {
+            categorySelect.innerHTML = '<option value="">-- 新建分类 --</option>';
+            
+            courses.forEach((category, index) => {
+                const option = document.createElement('option');
+                option.value = index;
+                option.textContent = category.name;
+                categorySelect.appendChild(option);
+            });
+        }
+        
+        // 添加新分类
+        function addCategory() {
+            const name = categoryNameInput.value.trim();
+            if (!name) {
+                showToast('请输入课程分类名称');
+                return;
+            }
+            
+            const selectedCategory = categorySelect.value;
+            
+            if (selectedCategory === '') {
+                // 新建分类
+                courses.push({
+                    name: name,
+                    episodes: []
+                });
+                showToast(`"${name}"分类添加成功`);
+            } else {
+                // 更新现有分类名称
+                const index = parseInt(selectedCategory);
+                courses[index].name = name;
+                showToast(`分类已更新为"${name}"`);
+            }
+            
+            saveToLocalStorage();
+            renderCourses();
+            updateCategorySelect();
+            categoryNameInput.value = '';
+        }
+        
+        // 添加新集数
+        function addEpisode() {
+            if (currentEditingEpisode !== null) {
+                updateEpisode(currentEditingEpisode.catIndex, currentEditingEpisode.epIndex);
+                return;
+            }
+            
+            const selectedCategory = categorySelect.value;
+            if (selectedCategory === '') {
+                showToast('请先选择或创建一个课程分类');
+                return;
+            }
+            
+            const number = episodeNumberInput.value.trim();
+            const title = episodeTitleInput.value.trim();
+            const link = episodeLinkInput.value.trim();
+            
+            if (!number || !title || !link) {
+                showToast('请填写完整的集数信息');
+                return;
+            }
+            
+            // 验证链接格式
+            if (!link.startsWith('http://') && !link.startsWith('https://')) {
+                showToast('请输入有效的链接地址 (以http://或https://开头)');
+                return;
+            }
+            
+            const index = parseInt(selectedCategory);
+            courses[index].episodes.push({
+                number: number,
+                title: title,
+                link: link,
+                watched: false
+            });
+            
+            saveToLocalStorage();
+            renderCourses();
+            showToast(`"${number}: ${title}"添加成功`);
+            
+            // 清空输入
+            clearEpisodeInputs();
+        }
+        
+        // 编辑单集
+        function editEpisode(catIndex, epIndex) {
+            const episode = courses[catIndex].episodes[epIndex];
+            categorySelect.value = catIndex;
+            categoryNameInput.value = courses[catIndex].name;
+            episodeNumberInput.value = episode.number;
+            episodeTitleInput.value = episode.title;
+            episodeLinkInput.value = episode.link;
+            
+            currentEditingEpisode = {
+                catIndex: catIndex,
+                epIndex: epIndex
+            };
+            
+            addEpisodeBtn.textContent = '更新集数';
+            showToast(`正在编辑: ${episode.number} ${episode.title}`);
+        }
+        
+        // 更新单集
+        function updateEpisode(catIndex, epIndex) {
+            const number = episodeNumberInput.value.trim();
+            const title = episodeTitleInput.value.trim();
+            const link = episodeLinkInput.value.trim();
+            
+            if (!number || !title || !link) {
+                showToast('请填写完整的集数信息');
+                return;
+            }
+            
+            // 保存原来的观看状态
+            const wasWatched = courses[catIndex].episodes[epIndex].watched;
+            
+            courses[catIndex].episodes[epIndex] = {
+                number: number,
+                title: title,
+                link: link,
+                watched: wasWatched
+            };
+            
+            saveToLocalStorage();
+            renderCourses();
+            showToast(`"${number}: ${title}"更新成功`);
+            
+            // 清空输入和重置状态
+            clearEpisodeInputs();
+            currentEditingEpisode = null;
+            addEpisodeBtn.textContent = '添加集数';
+        }
+        
+        // 删除单集
+        function deleteEpisode(catIndex, epIndex) {
+            const episode = courses[catIndex].episodes[epIndex];
+            if (confirm(`确定要删除"${episode.number}: ${episode.title}"吗？`)) {
+                courses[catIndex].episodes.splice(epIndex, 1);
+                saveToLocalStorage();
+                renderCourses();
+                showToast(`已删除: ${episode.number} ${episode.title}`);
+                
+                // 如果是正在编辑的集数，清空输入
+                if (currentEditingEpisode && 
+                    currentEditingEpisode.catIndex === catIndex && 
+                    currentEditingEpisode.epIndex === epIndex) {
+                    clearEpisodeInputs();
+                    currentEditingEpisode = null;
+                    addEpisodeBtn.textContent = '添加集数';
+                }
+            }
+        }
+        
+        // 删除分类
+        function deleteCategory() {
+            const selectedCategory = categorySelect.value;
+            if (selectedCategory === '') {
+                showToast('请选择要删除的分类');
+                return;
+            }
+            
+            const index = parseInt(selectedCategory);
+            const categoryName = courses[index].name;
+            
+            if (confirm(`确定要删除"${categoryName}"分类及其所有集数吗？`)) {
+                courses.splice(index, 1);
+                saveToLocalStorage();
+                renderCourses();
+                updateCategorySelect();
+                categorySelect.value = '';
+                showToast(`"${categoryName}"分类已删除`);
+                
+                // 清空输入
+                clearEpisodeInputs();
+                currentEditingEpisode = null;
+                addEpisodeBtn.textContent = '添加集数';
+            }
+        }
+        
+        // 清空集数输入
+        function clearEpisodeInputs() {
+            episodeNumberInput.value = '';
+            episodeTitleInput.value = '';
+            episodeLinkInput.value = '';
+        }
+        
+        // 切换编辑模式
+        function toggleEditMode() {
+            editMode = !editMode;
+            renderCourses();
+        }
+        
+        // 保存到本地存储
+        function saveToLocalStorage() {
+            localStorage.setItem('kidCourses', JSON.stringify(courses));
+        }
+        
+        // 生成静态页面
+        function generateStaticPage() {
+            if (courses.length === 0) {
+                showToast('没有课程内容可生成');
+                return;
+            }
+            
+            // 创建静态HTML内容
+            let staticHTML = `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>儿童课程目录</title>
+    <style>
+        :root {
+            --primary-color: #6a89cc;
+            --secondary-color: #82ccdd;
+            --accent-color: #f8c291;
+            --dark-color: #3c6382;
+            --light-color: #f7f1e3;
+        }
+        
+        * {
+            box-sizing: border-box;
+            font-family: 'Comic Sans MS', 'Marker Felt', 'Arial Rounded MT Bold', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            background-color: #f0f4f8;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+            color: #333;
+        }
+        
+        h1 {
+            text-align: center;
+            color: var(--dark-color);
+            margin-bottom: 20px;
+            font-size: 2.2em;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .course-category {
+            background: white;
+            border-radius: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .course-category:hover {
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .category-header {
+            padding: 15px 20px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .category-name {
+            font-weight: bold;
+            font-size: 1.3em;
+            flex-grow: 1;
+        }
+        
+        .toggle-icon {
+            font-size: 1.2em;
+            transition: transform 0.3s;
+        }
+        
+        .course-category.expanded .toggle-icon {
+            transform: rotate(180deg);
+        }
+        
+        .episodes-container {
+            display: none;
+            padding: 0;
+        }
+        
+        .episode {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid #eee;
+            transition: background 0.2s;
+        }
+        
+        .episode:hover {
+            background-color: #f9f9f9;
+        }
+        
+        .episode:last-child {
+            border-bottom: none;
+        }
+        
+        .episode-number {
+            min-width: 100px;
+            font-weight: bold;
+            color: var(--dark-color);
+            background-color: var(--accent-color);
+            padding: 5px 10px;
+            border-radius: 20px;
+            text-align: center;
+            margin-right: 15px;
+        }
+        
+        .episode-title {
+            flex-grow: 1;
+            color: var(--dark-color);
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .episode-title:hover {
+            color: var(--primary-color);
+            text-decoration: underline;
+        }
+        
+        .status-toggle {
+            width: 70px;
+            height: 35px;
+            border-radius: 20px;
+            background-color: #e55039;
+            position: relative;
+            cursor: pointer;
+            margin-left: 15px;
+            flex-shrink: 0;
+            transition: background-color 0.3s;
+        }
+        
+        .status-toggle.watched {
+            background-color: #78e08f;
+        }
+        
+        .toggle-knob {
+            width: 30px;
+            height: 30px;
+            background-color: white;
+            border-radius: 50%;
+            position: absolute;
+            top: 2.5px;
+            left: 3px;
+            transition: left 0.3s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .status-toggle.watched .toggle-knob {
+            left: 37px;
+        }
+        
+        .status-text {
+            font-size: 14px;
+            color: white;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            text-align: center;
+            user-select: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <h1>📚 我的学习课程 ✨</h1>
+    
+    <div id="courses-container">`;
+
+            // 添加课程内容
+            courses.forEach((category, catIndex) => {
+                staticHTML += `
+        <div class="course-category ${catIndex === 0 ? 'expanded' : ''}">
+            <div class="category-header">
+                <div class="category-name">${escapeHtml(category.name)}</div>
+                <div class="toggle-icon">${catIndex === 0 ? '▲' : '▼'}</div>
+            </div>
+            <div class="episodes-container" style="${catIndex === 0 ? 'display:block;' : 'display:none;'}">`;
+                
+                category.episodes.forEach((episode, epIndex) => {
+                    staticHTML += `
+                <div class="episode">
+                    <div class="episode-number">${escapeHtml(episode.number)}</div>
+                    <div class="episode-title">${escapeHtml(episode.title)}</div>
+                    <div class="status-toggle" data-cat="${catIndex}" data-ep="${epIndex}">
+                        <div class="toggle-knob"></div>
+                        <div class="status-text">未看</div>
+                    </div>
+                </div>`;
+                });
+                
+                staticHTML += `
+            </div>
+        </div>`;
+            });
+
+            // 添加包含状态保存功能的脚本
+            staticHTML += `
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 从localStorage加载观看状态
+            const watchedStatus = JSON.parse(localStorage.getItem('courseWatched')) || {};
+            
+            // 初始化所有状态切换按钮
+            document.querySelectorAll('.status-toggle').forEach(toggle => {
+                const catIndex = toggle.getAttribute('data-cat');
+                const epIndex = toggle.getAttribute('data-ep');
+                const statusKey = \`\${catIndex}-\${epIndex}\`;
+                
+                // 设置初始状态
+                if (watchedStatus[statusKey]) {
+                    toggle.classList.add('watched');
+                    toggle.querySelector('.status-text').textContent = '已看';
+                }
+                
+                // 点击切换状态
+                toggle.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    this.classList.toggle('watched');
+                    const isWatched = this.classList.contains('watched');
+                    this.querySelector('.status-text').textContent = isWatched ? '已看' : '未看';
+                    
+                    // 保存新状态
+                    watchedStatus[statusKey] = isWatched;
+                    localStorage.setItem('courseWatched', JSON.stringify(watchedStatus));
+                });
+            });
+
+            // 点击标题打开链接并自动标记为已看
+            document.querySelectorAll('.episode-title').forEach(title => {
+                title.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const episodeElement = this.closest('.episode');
+                    const toggle = episodeElement.querySelector('.status-toggle');
+                    const catIndex = toggle.getAttribute('data-cat');
+                    const epIndex = toggle.getAttribute('data-ep');
+                    const statusKey = \`\${catIndex}-\${epIndex}\`;
+                    
+                    // 标记为已看
+                    toggle.classList.add('watched');
+                    toggle.querySelector('.status-text').textContent = '已看';
+                    watchedStatus[statusKey] = true;
+                    localStorage.setItem('courseWatched', JSON.stringify(watchedStatus));
+                    
+                    // 打开链接
+                    const coursesData = ${JSON.stringify(courses)};
+                    const link = coursesData[catIndex].episodes[epIndex].link;
+                    window.open(link, '_blank');
+                });
+            });
+
+            // 展开/折叠功能
+            document.querySelectorAll('.category-header').forEach(header => {
+                header.addEventListener('click', function() {
+                    const categoryElement = this.parentElement;
+                    const episodesContainer = categoryElement.querySelector('.episodes-container');
+                    const icon = this.querySelector('.toggle-icon');
+                    
+                    categoryElement.classList.toggle('expanded');
+                    const isExpanded = categoryElement.classList.contains('expanded');
+                    episodesContainer.style.display = isExpanded ? 'block' : 'none';
+                    icon.textContent = isExpanded ? '▲' : '▼';
+                });
+            });
+        });
+    <\/script>
+</body>
+</html>`;
+
+            // 创建Blob对象并下载
+            const blob = new Blob([staticHTML], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'courses.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            
+            showToast('静态页面已生成，请上传到GitHub');
+        }
+        
+        // HTML转义函数
+        function escapeHtml(unsafe) {
+            return unsafe.toString()
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+        
+        // 初始化应用
+        init();
+    </script>
+</body>
+</html>
